@@ -1,7 +1,135 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+<h1 align="middle">Project 1: Rasterizer</h1>
+<h2 align="middle">YOUR NAME, CS184-??</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
+
+<h2 align="middle">Section I: Rasterization</h2>
+
+<h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+<p>Triangles are rasterized by</p>
+<ul>
+  <li>establishing coordinates of the smallest bounding box that contains the triangle</li>
+  <li>checking if the center of every pixel in the bounding box is contained in the triangle using the three-line test</li>
+  <li>and coloring the sample buffer for pixels that are contained.</li>
+</ul>
+<p>This is no worse than checking each sample within the bounding box of the triangle because it is doing exactly that. There are no special optimizations besides inlining.</p>
+<img src="images/q1.png" align="middle" width="800px"/>
+<!-- <p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+      <td>
+        <img src="images/image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+      <td>
+        <img src="images/image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div> -->
+
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+<p>Supersampling is done by</p>
+<ul>
+  <li>growing the size of <code>sample_buffer</code> by a factor of the sample rate. Now, each pixel is represented by <code>sample_rate</code> indices rather than just one. This is the only data structure change.</li>
+  <li>picking <code>sample_rate</code> coordinates in each pixel (each integer step) and filling the corresponding index in <code>sample_buffer</code> if it is in the triangle.</li>
+  <li>averaging the sampled values to create a downsampled color to input into <code>rgb_buffer</code>. This antialiases triangles by visually smoothing edges, creating a transition between the inside and outside of the triangle.</li>
+</ul>
+<img src="images/q2-1.png" align="middle" width="250px"/>
+<img src="images/q2-2.png" align="middle" width="250px"/>
+<img src="images/q2-3.png" align="middle" width="250px"/>
+<img src="images/q2-4.png" align="middle" width="250px"/>
+<p>From left to right, we can observe that the lines on the triangle appear less jagged (view the zoomed photo if necessary, I tried to position them left to right on one line).</p>
+<p>We observe this because the triangle edges are being blended with the white border to create a softer transition between colors. Consequently, the lines appear smoother.</p>
+
+
+
+<h3 align="middle">Part 3: Transforms</h3>
+
+
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 4: Barycentric coordinates</h3>
+<p>Barycentric coordinates are coordinates that account for their position relative to the vertices of a shape (a triangle in this case). These coordinates are a weighted mean of the area between a chosen point and the three vertices.</p>
+<img src="images/q4-tri.png" align="middle" width="400px"/>
+<p>The triangle above has blue, yellow, and green vertices. Each coordinate within it is a weighted sum of those colors.</p>
+<img src="images/q4.png" align="middle" width="250px"/>
+<p>Pictured above is test7.png.</p>
+
+
+<h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+<p>Pixel sampling is sampling points from an image to "reconstruct" it. We can sample points from a texture to display it on a screen by sampling the color of the texture at each coordinate.</p>
+<p>For this project, I implemented two sampling methods. <code>sample_nearest</code> would find the closest texel based on the barycentric coordinates and sample a color from it.</p> <code>sample_bilinear</code> is similar but does a bilinear interpolation of the four closest texels.</p>
+<img src="images/q5-1.png" align="middle" width="250px"/>
+<img src="images/q5-2.png" align="middle" width="250px"/>
+<img src="images/q5-3.png" align="middle" width="250px"/>
+<img src="images/q5-4.png" align="middle" width="250px"/>
+<p>We can see in the above images that the latitude/longitude lines on the map are not connected properly when using nearest sampling with a sample rate of 1. Bilinear sampling fixes this by averaging two texels. This issue becomes less apparent with a higher sample rate. There will be a large difference between nearest and bilinear sampling when the image is low resolution and the texture is very thin. This leaves lots of room for gaps in the rendering.</p>
+
+
+
+<h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+<p>After defaulting to level 0 for part 5, I implemented nearest and linear level sampling. Nearest level sampling finds the best mipmap level based on difference vectors and produces a higher resolution version of the texture. Linear level sampling is very similar, but instead of picking the nearest, it returns the average of the two nearest mipmaps. Both of these are bounded by [0, # of mipmaps].</p>
+<p>With each sampling method, higher quality means less performance. Nearest level sampling and increasing the sample relative increase the memory taken through either mipmaps or the sample buffer. Bilinear pixel sampling becomes more computationally expensive as a result of checking two levels and doing more interpolation.</p>
+<img src="images/q6-1.png" align="middle" width="250px"/>
+<img src="images/q6-2.png" align="middle" width="250px"/>
+<img src="images/q6-3.png" align="middle" width="250px"/>
+<img src="images/q6-4.png" align="middle" width="250px"/>
+<p>The above images show how choosing a better pixel sampling method improves the texture of Shrek's scarf/top.</p>
+<p></p>
+
+
+<h2 align="middle">Section III: Art Competition</h2>
+<p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+<h3 align="middle">Part 7: Draw something interesting!</h3>
+
+</body>
 </html>
